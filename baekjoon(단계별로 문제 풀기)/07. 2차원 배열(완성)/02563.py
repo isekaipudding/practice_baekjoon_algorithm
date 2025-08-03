@@ -1,4 +1,4 @@
-# 2563번(최댓값) 문제 : https://www.acmicpc.net/problem/2563
+# 2563번(색종이) 문제 : https://www.acmicpc.net/problem/2563
 import sys
 
 input = sys.stdin.readline

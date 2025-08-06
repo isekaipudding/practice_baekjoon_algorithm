@@ -4,7 +4,7 @@ import math
 
 input = sys.stdin.readline
 
-numbers = list(map(int, input().split()))
+numbers:list = list(map(int, input().split()))
 climb:int = numbers[0]
 slip:int = numbers[1]
 height:int = numbers[2]

@@ -8,7 +8,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-// 그냥 말도 안 됩니다. 이게 어떻게 루비 5 밖에 안 됩니까? 구현 난이도가 루비 3입니다.
+// 그냥 말도 안 됩니다. 이게 어떻게 루비 5 밖에 안 됩니까? 구현 난이도가 루비 4입니다.
 
 #define MXK 17000001LL
 #define HASH_BITS 21

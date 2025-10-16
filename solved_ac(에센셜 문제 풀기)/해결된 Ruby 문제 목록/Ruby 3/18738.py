@@ -3,6 +3,8 @@ import sys
 
 input = sys.stdin.readline
 
+# 슬라이딩 윈도우(투 포인터)로 시간 복잡도를 O(N^2)(최악의 경우 O(N^3))에서 O(N)으로 개선합니다.
+
 # 두 명의 플레이어가 번갈아 카드를 내고 승패를 겨루는 2인 제로섬 게임입니다.
 # 양측 모두 완전 정보 하에서 최적 전략(미니맥스 알고리즘)을 따릅니다.
 # 게임 규칙 : 드미트릭(Dmytryk)이 첫 라운드 선공이며, 각 라운드마다 선공이 카드를 내면 후공이 그 카드를 보고 자신의 카드를 냅니다.
@@ -37,30 +39,29 @@ while True :
             result += len(L1) # 남은 모든 카드 수 만큼 드미트릭 승리 횟수에 더함
             break
 
-        candidates:list = []
         number:int = len(L1)
-        best_dmytryk:int = -number
-        best_petro:int = number
 
-        # 드미트릭의 각 카드 L1[i]에 대해, 페트로가 이길 수 있는 (더 큰) 첫 번째 카드 L2[j]를 찾는다.
-        # 즉, 드미트릭이 L1[i]를 내면 후공인 페트로는 그보다 큰 L2[j]로 대응해야 한다는 뜻입니다.
-        for i in range(number) :
-            j = 0
-            # Petro의 카드 중 L1[i]보다 strictly 큰 첫 카드를 찾는다.
-            while j < number and L1[i] >= L2[j] :
+        # --- O(number) 투 포인터로 (i, j) 최적 쌍을 직접 찾기 ---
+        # j는 "L2[j] > L1[i]"를 만족하는 첫 인덱스(upper_bound)를
+        # i가 증가할 때 단조 증가로 한 번만 전진시켜 총 O(number)에 찾습니다.
+        best_diff = -10**9
+        best_dmytryk = 0
+        best_petro = 0
+        j = 0
+        for i in range(number):
+            # L2[j] <= L1[i] 인 동안 전진 → 첫 L2[j] > L1[i]에서 정지
+            while j < number and L2[j] <= L1[i]:
                 j += 1
             if j < number:
-                candidates.append((i, j))
-
-        # 후보로 찾은 (i, j) 쌍들 중에서 i - j의 값이 최대인 쌍을 선택합니다.
-        # i - j가 크다는 것은 드미트릭이 비교적 큰 카드를 내고, 페트로는 가까스로 그보다 약간 큰 카드로 이기는 경우로,
-        # 결과적으로 페트로의 좋은 카드 하나를 소모시키면서 드미트릭의 더 큰 카드들은 남기는 전략이 됩니다.
-        best_dmytryk = -number
-        best_petro = number
-        for i, j in candidates:
-            if i - j > best_dmytryk - best_petro:
-                best_dmytryk = i
-                best_petro = j
+                diff = i - j
+                if diff > best_diff:
+                    best_diff = diff
+                    best_dmytryk = i
+                    best_petro = j
+            else:
+                # 더 이상 어떤 L2도 L1[i]를 이길 수 없음 → 이후 i에서도 불가능
+                break
+        # -------------------------------------------------------
 
         # 위에서 결정한 최적의 카드 페어를 실제로 게임에서 내는 것으로 간주하고, 두 플레이어의 카드 목록에서 제거합니다.
         L1.pop(best_dmytryk)
@@ -86,29 +87,25 @@ while True :
             result -= len(L2)        # 남은 라운드 모두 드미트릭이 패배하므로, 드미트릭의 승리 횟수에서 그만큼 빼줍니다.
             break
 
-        candidates:list = []
         number:int = len(L2)
-        best_dmytryk:int = number
-        best_petro:int = -number
 
-        # 페트로의 각 카드 L2[i]에 대해, 드미트릭이 이길 수 있는 (더 큰) 첫 번째 카드 L1[j]를 찾습니다.
-        # 즉, 페트로가 L2[i]를 내면 드미트릭은 가지고 있는 카드 중 그보다 큰 L1[j]로 대응하게 됩니다 (있다면 반드시 내야 함).
-        for i in range(number) :
-            j = 0
-            # Dmytryk의 카드 중 L2[i]보다 strictly 큰 첫 카드를 찾는다.
-            while j < number and L2[i] >= L1[j]:
+        # --- O(number) 투 포인터(대칭) ---
+        best_diff = -10**9
+        best_petro = 0
+        best_dmytryk = 0
+        j = 0
+        for i in range(number):
+            while j < number and L1[j] <= L2[i]:
                 j += 1
-            if j < number :
-                candidates.append((i, j))
-
-        # 후보 (i, j) 쌍들 중에서 i - j의 값이 최대인 것을 선택합니다.
-        # (페트로 입장에서 i - j가 크다는 것은 비교적 큰 카드를 내서 드미트릭의 약간 더 큰 카드 하나를 소모시키는 전략이 됩니다.)
-        best_dmytryk = number
-        best_petro = -number
-        for i, j in candidates :
-            if i - j > best_petro - best_dmytryk :
-                best_petro = i
-                best_dmytryk = j
+            if j < number:
+                diff = i - j
+                if diff > best_diff:
+                    best_diff = diff
+                    best_petro = i
+                    best_dmytryk = j
+            else:
+                break
+        # -----------------------------------
 
         # 선택된 카드 쌍을 제거하여 라운드를 진행합니다.
         L1.pop(best_dmytryk)
